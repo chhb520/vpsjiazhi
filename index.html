@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VPS 剩余价值计算器</title>
+    <style>
+        /* 全局样式和字体 */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* VPS计算器专用样式 - 高优先级 */
+        .vps-calculator-wrapper {
+            max-width: 100%;
+            margin: 0 auto;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .vps-calculator-wrapper * {
+            box-sizing: border-box;
+        }
+
+        .vps-calculator-wrapper .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 25px 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e9ecef;
+        }
+
+        .vps-calculator-wrapper .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .vps-calculator-wrapper .header h1 {
+            color: #1a73e8;
+            font-size: 2.2em;
+            margin: 0 0 10px 0;
+            font-weight: 600;
+        }
+
+        .vps-calculator-wrapper .header p {
+            color: #5f6368;
+            font-size: 1em;
+            margin: 0;
+        }
+
+        .vps-calculator-wrapper .calculator-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .vps-calculator-wrapper .form-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .vps-calculator-wrapper .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .vps-calculator-wrapper label {
+            font-weight: 600;
+            color: #202124;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        .vps-calculator-wrapper input,
+        .vps-calculator-wrapper select {
+            padding: 10px 12px;
+            border: 1px solid #dadce0;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: all 0.2s ease;
+            background: white;
+            width: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .vps-calculator-wrapper input:focus,
+        .vps-calculator-wrapper select:focus {
+            outline: none;
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+        }
+
+        .vps-calculator-wrapper .currency-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .vps-calculator-wrapper .currency-group input {
+            flex-grow: 1;
+        }
+
+        .vps-calculator-wrapper .currency-group select {
+            flex-shrink: 0;
+            width: 120px;
+        }
+
+        .vps-calculator-wrapper .expiry-date-display {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .vps-calculator-wrapper .expiry-date-display .expiry-value {
+            padding: 10px 12px;
+            border: 1px solid #dadce0;
+            border-radius: 6px;
+            font-size: 1em;
+            background: #f8f9fa;
+            color: #1a73e8;
+            font-weight: 600;
+            min-height: 42px; /* Match input height */
+            display: flex;
+            align-items: center;
+        }
+
+        .vps-calculator-wrapper .calculate-btn {
+            grid-column: 1 / -1;
+            background: #1a73e8;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1.1em;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .vps-calculator-wrapper .calculate-btn:hover {
+            background: #1557b0;
+            transform: translateY(-2px);
+        }
+
+        .vps-calculator-wrapper .results {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 25px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.4s ease;
+            visibility: hidden;
+        }
+
+        .vps-calculator-wrapper .results.show {
+            opacity: 1;
+            transform: translateY(0);
+            visibility: visible;
+        }
+
+        .vps-calculator-wrapper .results h2 {
+            font-size: 1.5em;
+            margin-top: 0;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #1a73e8;
+        }
+
+        .vps-calculator-wrapper .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .vps-calculator-wrapper .result-item:last-of-type {
+            border-bottom: none;
+        }
+
+        .vps-calculator-wrapper .result-label {
+            font-weight: 500;
+            font-size: 1em;
+            color: #5f6368;
+        }
+
+        .vps-calculator-wrapper .result-value {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #202124;
+        }
+
+        .vps-calculator-wrapper .share-btn {
+            background: #28a745;
+            border: none;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            margin-top: 20px;
+            transition: all 0.2s ease;
+            width: 100%;
+            font-size: 1em;
+        }
+
+        .vps-calculator-wrapper .share-btn:hover {
+            background: #218838;
+        }
+
+        .vps-calculator-wrapper .info-box {
+            background: #e8f4fd;
+            border: 1px solid #d0e8fc;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #0c5460;
+            font-size: 0.95em;
+        }
+        
+        .vps-calculator-wrapper .exchange-rate-info {
+            font-size: 0.85em;
+            color: #5f6368;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border-left: 3px solid #1a73e8;
+            text-align: center;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 640px) {
+            body {
+                padding: 10px;
+            }
+            .vps-calculator-wrapper .container {
+                padding: 20px;
+            }
+            .vps-calculator-wrapper .calculator-form {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            .vps-calculator-wrapper .currency-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .vps-calculator-wrapper .currency-group select {
+                width: 100%;
+            }
+            .vps-calculator-wrapper .header h1 {
+                font-size: 1.8em;
+            }
+        }
+
+        /* 重置主题样式干扰 */
+        .vps-calculator-wrapper select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 1em;
+            padding-right: 32px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="vps-calculator-wrapper">
+        <div class="container">
+            <div class="header">
+                <h1>VPS 剩余价值计算器</h1>
+                <p>精确计算VPS剩余价值和剩余时间</p>
+            </div>
+    
+            <div class="info-box">
+                <strong>使用说明：</strong> 输入续费价格、选择付款周期、购买日期和交易价格，即可获取VPS剩余价值、剩余天数等信息。到期日期将自动计算。
+            </div>
+    
+  
+    
+            <div class="calculator-form">
+                <div class="form-group">
+                    <label for="renewPrice">续费价格</label>
+                    <div class="currency-group">
+                        <input type="number" id="renewPrice" placeholder="请输入续费价" step="0.01" required>
+                        <select id="renewCurrency">
+                            <option value="CNY">￥人民币</option>
+                            <option value="USD">$美元</option>
+                            <option value="EUR">€欧元</option>
+                            <option value="JPY">¥日元</option>
+                            <option value="HKD">HK$港币</option>
+                        </select>
+                    </div>
+                </div>
+    
+                <div class="form-group">
+                    <label for="tradePrice">交易价格</label>
+                    <div class="currency-group">
+                        <input type="number" id="tradePrice" placeholder="请输入交易价" step="0.01" required>
+                        <select id="tradeCurrency">
+                            <option value="CNY">￥人民币</option>
+                            <option value="USD">$美元</option>
+                            <option value="EUR">€欧元</option>
+                            <option value="JPY">¥日元</option>
+                            <option value="HKD">HK$港币</option>
+                        </select>
+                    </div>
+                </div>
+    
+                <div class="form-group full-width">
+                    <label for="paymentCycle">付款周期</label>
+                    <select id="paymentCycle" required onchange="updateExpiryDate()">
+                        <option value="1">1 月付</option>
+                        <option value="3">季度付</option>
+                        <option value="6">半年付</option>
+                        <option value="12" selected>1 年付</option>
+                        <option value="24">2 年付</option>
+                        <option value="36">3 年付</option>
+                        <option value="60">5 年付</option>
+                    </select>
+                </div>
+    
+                <div class="form-group">
+                    <label for="purchaseDate">购买日期</label>
+                    <input type="date" id="purchaseDate" required onchange="updateExpiryDate()">
+                </div>
+    
+                <div class="form-group">
+                    <label for="tradeDate">交易日期</label>
+                    <input type="date" id="tradeDate" required>
+                </div>
+    
+                <div class="form-group full-width">
+                    <div class="expiry-date-display">
+                        <label>到期日期</label>
+                        <div class="expiry-value" id="calculatedExpiryDate">请先选择购买日期和付款周期</div>
+                    </div>
+                </div>
+    
+                <button type="button" class="calculate-btn" onclick="calculateVPS()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line></svg>
+                    开始计算
+                </button>
+            </div>
+    
+            <div class="results" id="results">
+                <h2>📊 计算结果</h2>
+                <div class="result-item">
+                    <span class="result-label">剩余天数：</span>
+                    <span class="result-value" id="remainingDays">-</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">剩余价值 (CNY)：</span>
+                    <span class="result-value" id="remainingValue">-</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">使用天数：</span>
+                    <span class="result-value" id="usedDays">-</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">溢价率：</span>
+                    <span class="result-value" id="premiumRate">-</span>
+                </div>
+                <button class="share-btn" onclick="copyResults()">📋 复制计算结果</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 内置的汇率表 (以CNY为基础)
+        const exchangeRates = {
+            "CNY": 1,
+            "USD": 7.1942,
+            "EUR": 7.8215,
+            "JPY": 0.0461,
+            "HKD": 0.9205,
+        };
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDates();
+        });
+
+        // 设置默认日期为今天
+        function initializeDates() {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const todayString = `${yyyy}-${mm}-${dd}`;
+
+            document.getElementById('purchaseDate').value = todayString;
+            document.getElementById('tradeDate').value = todayString;
+            
+            updateExpiryDate();
+        }
+
+        // 更新到期日期显示
+        function updateExpiryDate() {
+            const purchaseDateStr = document.getElementById('purchaseDate').value;
+            const paymentCycle = parseInt(document.getElementById('paymentCycle').value);
+            const display = document.getElementById('calculatedExpiryDate');
+
+            if (!purchaseDateStr || isNaN(paymentCycle)) {
+                display.textContent = '请先选择购买日期和付款周期';
+                return;
+            }
+
+            const purchaseDate = new Date(purchaseDateStr);
+            // 修正时区问题，确保日期计算准确
+            purchaseDate.setMinutes(purchaseDate.getMinutes() + purchaseDate.getTimezoneOffset());
+            
+            const expiryDate = new Date(purchaseDate);
+
+            if (paymentCycle < 12) {
+                expiryDate.setMonth(expiryDate.getMonth() + paymentCycle);
+            } else {
+                expiryDate.setFullYear(expiryDate.getFullYear() + paymentCycle / 12);
+            }
+
+            const yyyy = expiryDate.getFullYear();
+            const mm = String(expiryDate.getMonth() + 1).padStart(2, '0');
+            const dd = String(expiryDate.getDate()).padStart(2, '0');
+            const dayOfWeek = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][expiryDate.getDay()];
+            
+            display.textContent = `${yyyy}/${mm}/${dd} ${dayOfWeek}`;
+        }
+
+        // 主计算函数
+        function calculateVPS() {
+            // 获取输入值
+            const renewPrice = parseFloat(document.getElementById('renewPrice').value);
+            const renewCurrency = document.getElementById('renewCurrency').value;
+            const tradePrice = parseFloat(document.getElementById('tradePrice').value);
+            const tradeCurrency = document.getElementById('tradeCurrency').value;
+            const paymentCycle = parseInt(document.getElementById('paymentCycle').value);
+
+            // 验证输入
+            if (isNaN(renewPrice) || isNaN(tradePrice)) {
+                alert('请输入有效的续费价格和交易价格！');
+                return;
+            }
+
+            // 获取日期并修正时区
+            const purchaseDate = new Date(document.getElementById('purchaseDate').value);
+            purchaseDate.setMinutes(purchaseDate.getMinutes() + purchaseDate.getTimezoneOffset());
+            
+            const tradeDate = new Date(document.getElementById('tradeDate').value);
+            tradeDate.setMinutes(tradeDate.getMinutes() + tradeDate.getTimezoneOffset());
+
+            const expiryDate = new Date(purchaseDate);
+            if (paymentCycle < 12) {
+                expiryDate.setMonth(expiryDate.getMonth() + paymentCycle);
+            } else {
+                expiryDate.setFullYear(expiryDate.getFullYear() + paymentCycle / 12);
+            }
+
+            // 转换为人民币 (CNY)
+            const renewPriceInCNY = renewPrice * exchangeRates[renewCurrency];
+            const tradePriceInCNY = tradePrice * exchangeRates[tradeCurrency];
+
+            // 计算天数 (单位: 毫秒)
+            const MS_PER_DAY = 1000 * 60 * 60 * 24;
+            const totalMs = expiryDate.getTime() - purchaseDate.getTime();
+            const remainingMs = expiryDate.getTime() - tradeDate.getTime();
+            const usedMs = tradeDate.getTime() - purchaseDate.getTime();
+            
+            const totalDays = Math.round(totalMs / MS_PER_DAY);
+            let remainingDays = Math.round(remainingMs / MS_PER_DAY);
+            let usedDays = Math.round(usedMs / MS_PER_DAY);
+
+            // 边界情况处理
+            if (totalDays <= 0) {
+                 alert('购买日期和付款周期设置有误，总周期为0或负数。');
+                 return;
+            }
+            if(remainingDays < 0) remainingDays = 0;
+            if(usedDays < 0) usedDays = 0;
+
+
+            // 计算价值
+            const dailyValue = renewPriceInCNY / totalDays;
+            const remainingValue = dailyValue * remainingDays;
+
+            let premiumRate = 0;
+            if (remainingValue > 0) {
+                premiumRate = ((tradePriceInCNY - remainingValue) / remainingValue) * 100;
+            } else if (tradePriceInCNY > 0) {
+                premiumRate = Infinity; // 如果剩余价值为0但交易价大于0，则溢价无穷大
+            }
+
+            // 显示结果
+            document.getElementById('remainingDays').textContent = `${remainingDays} 天`;
+            document.getElementById('remainingValue').textContent = `¥ ${remainingValue.toFixed(2)}`;
+            document.getElementById('usedDays').textContent = `${usedDays} 天`;
+            document.getElementById('premiumRate').textContent = `${premiumRate.toFixed(2)} %`;
+
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.classList.add('show');
+        }
+
+        // 复制结果到剪贴板
+        function copyResults() {
+            const results = [
+                `剩余天数：${document.getElementById('remainingDays').textContent}`,
+                `剩余价值：${document.getElementById('remainingValue').textContent}`,
+                `使用天数：${document.getElementById('usedDays').textContent}`,
+                `溢价率：${document.getElementById('premiumRate').textContent}`
+            ].join('\n');
+            
+            navigator.clipboard.writeText(results).then(() => {
+                const btn = document.querySelector('.share-btn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '✅ 已复制！';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('复制失败: ', err);
+                alert('复制失败，请手动复制。');
+            });
+        }
+    </script>
+</body>
+</html>
